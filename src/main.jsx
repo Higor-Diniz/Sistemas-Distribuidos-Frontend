@@ -8,6 +8,8 @@ import {
 import { Header } from './components/Header';
 import { CriarPostagem } from './pages/CriarPostagem';
 import { ListarPostagens } from './pages/ListarPostagens';
+import { EditarPostagem } from './pages/EditarPostagem';
+import { Categorias } from './pages/Categorias';
 
 function RootLayout() {
   return (
@@ -23,8 +25,10 @@ const router = createBrowserRouter([
     path: '/',
     element: <RootLayout />,
     children: [
-      { index: true, element: <ListarPostagens /> },
+      { index: true, element: <Categorias /> },
+      { path: 'postagens', element: <ListarPostagens /> },
       { path: 'criar-postagem', element: <CriarPostagem /> },
+      { path: 'postagens/editar/:id', element: <EditarPostagem /> },
     ],
   },
 ]);

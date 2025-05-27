@@ -1,22 +1,41 @@
 import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Box,
   Typography,
   CircularProgress,
   Divider,
+  IconButton,
+  Tooltip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  Button,
 } from '@mui/material';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
 export function ListarPostagens() {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const categoriaId = searchParams.get('categoria');
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [deleteDialog, setDeleteDialog] = useState({ open: false, postId: null, postTitle: '' });
 
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const response = await fetch(`${API_URL}/api/v1/posts`);
+        let url = `${API_URL}/api/v1/posts`;
+        if (categoriaId) {
+          url += `?categoryId=${categoriaId}`;
+        }
+        const response = await fetch(url);
         if (!response.ok) throw new Error(`Erro ${response.status}`);
         const data = await response.json();
         setPosts(data);
@@ -29,7 +48,32 @@ export function ListarPostagens() {
     };
 
     fetchPosts();
-  }, []);
+  }, [categoriaId]);
+
+  const handleDeleteClick = (post) => {
+    setDeleteDialog({ open: true, postId: post.id, postTitle: post.title });
+  };
+
+  const handleDeleteConfirm = async () => {
+    const { postId } = deleteDialog;
+    try {
+      const response = await fetch(`${API_URL}/api/v1/posts/${postId}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) throw new Error(`Erro ${response.status}`);
+      
+      // Remove a postagem da lista local
+      setPosts(posts.filter(post => post.id !== postId));
+      setDeleteDialog({ open: false, postId: null, postTitle: '' });
+    } catch (err) {
+      console.error('Falha ao deletar postagem:', err);
+      alert('Erro ao deletar postagem');
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteDialog({ open: false, postId: null, postTitle: '' });
+  };
 
   if (loading) {
     return (
@@ -72,16 +116,59 @@ export function ListarPostagens() {
 
       {posts.map((post) => (
         <Box key={post.id}>
-          <Typography variant="h6">{post.title}</Typography>
-          <Typography variant="subtitle2" color="textSecondary">
-            {post.categoryName}
-          </Typography>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <Box>
+              <Typography variant="h6">{post.title}</Typography>
+              <Typography variant="subtitle2" color="textSecondary">
+                {post.categoryName}
+              </Typography>
+            </Box>
+            <Box>
+              <Tooltip title="Editar postagem">
+                <IconButton
+                  onClick={() => navigate(`/postagens/editar/${post.id}`)}
+                  size="small"
+                  color="primary"
+                >
+                  <EditIcon />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="Excluir postagem">
+                <IconButton
+                  onClick={() => handleDeleteClick(post)}
+                  size="small"
+                  color="error"
+                >
+                  <DeleteIcon />
+                </IconButton>
+              </Tooltip>
+            </Box>
+          </Box>
           <Typography variant="body1" paragraph>
             {post.content}
           </Typography>
           <Divider />
         </Box>
       ))}
+
+      <Dialog
+        open={deleteDialog.open}
+        onClose={handleDeleteCancel}
+      >
+        <DialogTitle>Confirmar exclusão</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Tem certeza que deseja excluir a postagem "{deleteDialog.postTitle}"?
+            Esta ação não pode ser desfeita.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDeleteCancel}>Cancelar</Button>
+          <Button onClick={handleDeleteConfirm} color="error" variant="contained">
+            Excluir
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

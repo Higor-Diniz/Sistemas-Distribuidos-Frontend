@@ -28,6 +28,14 @@ export function Header() {
             sx={{ mr: 1 }}
             onClick={() => navigate('/')}
           >
+            Categorias
+          </Button>
+          <Button
+            variant="contained"
+            color="primary"
+            sx={{ mr: 1 }}
+            onClick={() => navigate('/postagens')}
+          >
             Postagens
           </Button>
           <Button
