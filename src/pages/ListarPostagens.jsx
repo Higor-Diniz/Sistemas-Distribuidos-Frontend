@@ -13,14 +13,20 @@ import {
   DialogContentText,
   DialogActions,
   Button,
+  Chip,
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import PersonIcon from '@mui/icons-material/Person';
+import { useAuthFetch } from '../hooks/useAuthFetch';
+import { useAuth } from '../contexts/AuthContext';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
 export function ListarPostagens() {
   const navigate = useNavigate();
+  const authFetch = useAuthFetch();
+  const { user } = useAuth();
   const [searchParams] = useSearchParams();
   const categoriaId = searchParams.get('categoria');
   const [posts, setPosts] = useState([]);
@@ -35,7 +41,7 @@ export function ListarPostagens() {
         if (categoriaId) {
           url += `?categoryId=${categoriaId}`;
         }
-        const response = await fetch(url);
+        const response = await authFetch(url);
         if (!response.ok) throw new Error(`Erro ${response.status}`);
         const data = await response.json();
         setPosts(data);
@@ -57,8 +63,8 @@ export function ListarPostagens() {
   const handleDeleteConfirm = async () => {
     const { postId } = deleteDialog;
     try {
-      const response = await fetch(`${API_URL}/api/v1/posts/${postId}`, {
-        method: 'DELETE',
+      const response = await authFetch(`${API_URL}/api/v1/posts/${postId}`, {
+        method: 'DELETE'
       });
       if (!response.ok) throw new Error(`Erro ${response.status}`);
       
@@ -115,13 +121,36 @@ export function ListarPostagens() {
       </Typography>
 
       {posts.map((post) => (
-        <Box key={post.id}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <Box 
+          key={post.id}
+          sx={{
+            backgroundColor: '#fff',
+            borderRadius: 2,
+            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+            p: 3,
+          }}
+        >
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
             <Box>
-              <Typography variant="h6">{post.title}</Typography>
-              <Typography variant="subtitle2" color="textSecondary">
-                {post.categoryName}
-              </Typography>
+              <Typography variant="h6" sx={{ mb: 1 }}>{post.title}</Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                <Chip
+                  icon={<PersonIcon />}
+                  label={post.authorUsername}
+                  size="small"
+                  color="primary"
+                  variant="outlined"
+                />
+                <Typography variant="caption" color="text.secondary">
+                  em
+                </Typography>
+                <Chip
+                  label={post.categoryName}
+                  size="small"
+                  color="default"
+                  variant="outlined"
+                />
+              </Box>
             </Box>
             <Box>
               <Tooltip title="Editar postagem">
@@ -144,7 +173,14 @@ export function ListarPostagens() {
               </Tooltip>
             </Box>
           </Box>
-          <Typography variant="body1" paragraph>
+          <Typography 
+            variant="body1" 
+            paragraph
+            sx={{
+              whiteSpace: 'pre-wrap',
+              wordBreak: 'break-word'
+            }}
+          >
             {post.content}
           </Typography>
           <Divider />

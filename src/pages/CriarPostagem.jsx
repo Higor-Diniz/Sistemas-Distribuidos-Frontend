@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Button,
@@ -10,10 +11,15 @@ import {
   FormHelperText,
   Typography,
 } from '@mui/material';
+import { useAuthFetch } from '../hooks/useAuthFetch';
+import { useAuth } from '../contexts/AuthContext';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
 export function CriarPostagem() {
+  const navigate = useNavigate();
+  const authFetch = useAuthFetch();
+  const { user } = useAuth();
   const [categories, setCategories] = useState([]);
   const [categoryId, setCategoryId] = useState('');
   const [title, setTitle] = useState('');
@@ -25,7 +31,7 @@ export function CriarPostagem() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetch(`${API_URL}/api/v1/categories`);
+        const response = await authFetch(`${API_URL}/api/v1/categories`);
         if (!response.ok) throw new Error(`Erro ${response.status}`);
         const data = await response.json();
         setCategories(data);
@@ -52,18 +58,21 @@ export function CriarPostagem() {
 
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/api/v1/posts`, {
+      const response = await authFetch(`${API_URL}/api/v1/posts`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, content, categoryId }),
+        body: JSON.stringify({ 
+          title, 
+          content, 
+          categoryId
+        }),
       });
       if (!response.ok) throw new Error(`Erro ${response.status}`);
-      setCategoryId('');
-      setTitle('');
-      setContent('');
-      setErrors({ categoryId: false, title: false, content: false });
+      
+      // Redireciona para a lista de postagens após criar
+      navigate('/postagens');
     } catch (error) {
       console.error('Falha ao cadastrar postagem:', error);
+      alert('Erro ao criar postagem. Verifique se você está autenticado.');
     } finally {
       setLoading(false);
     }

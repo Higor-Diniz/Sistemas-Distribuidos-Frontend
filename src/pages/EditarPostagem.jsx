@@ -11,12 +11,16 @@ import {
   FormHelperText,
   Typography,
 } from '@mui/material';
+import { useAuthFetch } from '../hooks/useAuthFetch';
+import { useAuth } from '../contexts/AuthContext';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
 export function EditarPostagem() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const authFetch = useAuthFetch();
+  const { user } = useAuth();
   const [categories, setCategories] = useState([]);
   const [categoryId, setCategoryId] = useState(0);
   const [title, setTitle] = useState('');
@@ -29,7 +33,7 @@ export function EditarPostagem() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetch(`${API_URL}/api/v1/categories`);
+        const response = await authFetch(`${API_URL}/api/v1/categories`);
         if (!response.ok) throw new Error(`Erro ${response.status}`);
         const data = await response.json();
         setCategories(data);
@@ -45,9 +49,10 @@ export function EditarPostagem() {
   useEffect(() => {
     const fetchPost = async () => {
       try {
-        const response = await fetch(`${API_URL}/api/v1/posts/${id}`);
+        const response = await authFetch(`${API_URL}/api/v1/posts/${id}`);
         if (!response.ok) throw new Error(`Erro ${response.status}`);
         const data = await response.json();
+        
         setTitle(data.title);
         setContent(data.content);
         
@@ -83,15 +88,19 @@ export function EditarPostagem() {
 
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/api/v1/posts/${id}`, {
+      const response = await authFetch(`${API_URL}/api/v1/posts/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, content, categoryId }),
+        body: JSON.stringify({ 
+          title, 
+          content, 
+          categoryId
+        }),
       });
       if (!response.ok) throw new Error(`Erro ${response.status}`);
       navigate('/postagens'); // Redireciona para a lista de postagens após editar
     } catch (error) {
       console.error('Falha ao atualizar postagem:', error);
+      alert('Erro ao atualizar postagem.');
     } finally {
       setLoading(false);
     }

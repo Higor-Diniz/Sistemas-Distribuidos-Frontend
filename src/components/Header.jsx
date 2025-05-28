@@ -1,9 +1,16 @@
 import { AppBar, Toolbar, Typography, Button, Box } from '@mui/material';
 import { useNavigate } from 'react-router';
+import { useAuth } from '../contexts/AuthContext';
 import logo from '../assets/logo.png';
 
 export function Header() {
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   return (
     <AppBar
@@ -21,11 +28,10 @@ export function Header() {
           <img src={logo} alt="Logo" style={{ height: 120, marginRight: 12 }} />
           <Typography variant="h6">Minha Empresa</Typography>
         </Box>
-        <Box>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Button
             variant="contained"
             color="primary"
-            sx={{ mr: 1 }}
             onClick={() => navigate('/')}
           >
             Categorias
@@ -33,7 +39,6 @@ export function Header() {
           <Button
             variant="contained"
             color="primary"
-            sx={{ mr: 1 }}
             onClick={() => navigate('/postagens')}
           >
             Postagens
@@ -45,6 +50,21 @@ export function Header() {
           >
             Criar Postagem
           </Button>
+          
+          {user && (
+            <>
+              <Typography variant="body2" sx={{ mx: 2 }}>
+                Olá, {user.username || user.name || user.email.split('@')[0]}
+              </Typography>
+              <Button
+                variant="outlined"
+                color="error"
+                onClick={handleLogout}
+              >
+                Sair
+              </Button>
+            </>
+          )}
         </Box>
       </Toolbar>
     </AppBar>

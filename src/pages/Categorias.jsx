@@ -9,11 +9,13 @@ import {
   CircularProgress,
   Grid,
 } from '@mui/material';
+import { useAuthFetch } from '../hooks/useAuthFetch';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
 export function Categorias() {
   const navigate = useNavigate();
+  const authFetch = useAuthFetch();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -21,7 +23,7 @@ export function Categorias() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetch(`${API_URL}/api/v1/categories`);
+        const response = await authFetch(`${API_URL}/api/v1/categories`);
         if (!response.ok) throw new Error(`Erro ${response.status}`);
         const data = await response.json();
         setCategories(data);
